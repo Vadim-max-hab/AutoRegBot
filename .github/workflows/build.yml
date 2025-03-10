@@ -20,6 +20,13 @@ jobs:
           pip3 install --upgrade pip
           pip3 install buildozer cython
 
+- name: Устанавливаем Buildozer без root
+  run: |
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install --upgrade pip
+    pip install buildozer
+    
       - name: ⚙️ Устанавливаем Buildozer
         run: |
           git clone https://github.com/kivy/buildozer.git
