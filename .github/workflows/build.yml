@@ -18,17 +18,24 @@ jobs:
       - name: 🏗️ Устанавливаем зависимости
         run: |
           sudo apt update
-          sudo apt install -y python3 python3-pip openjdk-17-jdk
+          sudo apt install -y python3 python3-pip openjdk-11-jdk git zip unzip libncurses5
           pip3 install --upgrade pip
 
       - name: 📦 Устанавливаем Buildozer в виртуальном окружении
         run: |
           python3 -m venv venv
-          source venv/bin/activate
+          source ./venv/bin/activate
           pip install buildozer Cython==0.29.21
 
       - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
         run: |
+          # Отключаем существующий swap, если он активен
+          sudo swapoff -a
+
+          # Удаляем существующий swap-файл, если он есть
+          sudo rm -f /swapfile
+
+          # Создаем новый swap-файл
           sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
@@ -36,7 +43,8 @@ jobs:
 
       - name: 📦 Собираем APK
         run: |
-          source venv/bin/activate
+          source ./venv/bin/activate
+          mkdir -p bin
           buildozer -v android debug
 
       - name: 📤 Загружаем APK в артефакты
