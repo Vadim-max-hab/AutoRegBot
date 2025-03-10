@@ -44,11 +44,24 @@ jobs:
             buildozer init
           fi
 
-      - name: 📜 Принимаем лицензии Android SDK
+      - name: 📥 Устанавливаем Android SDK
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
+
+          # Скачиваем Android Command Line Tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk-tools.zip
+          unzip android-sdk-tools.zip -d ~/.android/cmdline-tools
+
+          # Настраиваем пути
+          echo "export ANDROID_HOME=~/.android" >> ~/.bashrc
+          echo "export PATH=$PATH:$ANDROID_HOME/cmdline-tools/tools/bin" >> ~/.bashrc
+          source ~/.bashrc
+
+          # Принимаем лицензии
           yes | sdkmanager --licenses
+
+          # Устанавливаем необходимые компоненты
           sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
 
       - name: 📦 Собираем APK
