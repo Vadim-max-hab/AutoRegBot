@@ -26,8 +26,8 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install buildozer Cython==0.29.21
-          
-          - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
+
+      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
         run: |
           sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
           sudo chmod 600 /swapfile
@@ -44,4 +44,3 @@ jobs:
         with:
           name: AutoRegBot-APK
           path: bin/*.apk
-
