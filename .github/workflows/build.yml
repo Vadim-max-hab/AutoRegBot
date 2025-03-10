@@ -19,7 +19,6 @@ jobs:
           sudo apt install -y python3 python3-pip openjdk-17-jdk unzip
           pip3 install --upgrade pip
           pip3 install buildozer cython
-
 - name: Устанавливаем Buildozer без root
   run: |
     python3 -m venv venv
