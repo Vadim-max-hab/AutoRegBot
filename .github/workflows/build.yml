@@ -42,6 +42,13 @@ jobs:
           sudo mkswap /swapfile
           sudo swapon /swapfile
 
+      - name: 📄 Создаём buildozer.spec (если его нет)
+        run: |
+          source ./venv/bin/activate
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
+
       - name: 📦 Собираем APK
         run: |
           source ./venv/bin/activate
