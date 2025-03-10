@@ -1,33 +1,47 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
     branches:
-      - main  # Сборка при коммите в main-ветку
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ✅ Клонируем репозиторий
-        uses: actions/checkout@v3
+      - name: 🛠️ Клонируем репозиторий
+        uses: actions/checkout@v4
 
-      - name: 📦 Устанавливаем зависимости
+      - name: 🏗️ Устанавливаем зависимости
         run: |
           sudo apt update
-          sudo apt install -y python3 python3-pip openjdk-17-jdk unzip
+          sudo apt install -y python3 python3-pip openjdk-17-jdk
           pip3 install --upgrade pip
-        - name: Устанавливаем Buildozer без root
-  run: |
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install --upgrade pip
-    pip install buildozer
-          pip3 install buildozer cython
-      - name: ⚙️ Устанавливаем Buildozer
+
+      - name: 📦 Устанавливаем Buildozer в виртуальном окружении
         run: |
-          git clone https://github.com/kivy/buildozer.git
-          cd buildozer
-          python3 setup.py install
-          cd ..
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install buildozer Cython==0.29.21
+
+      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: 📦 Собираем APK
+        run: |
+          source venv/bin/activate
+          buildozer -v android debug
+
+      - name: 📤 Загружаем APK в артефакты
+        uses: actions/upload-artifact@v3
+        with:
+          name: AutoRegBot-APK
+          path: bin/*.apk
