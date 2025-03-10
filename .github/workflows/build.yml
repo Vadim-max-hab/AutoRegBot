@@ -53,9 +53,14 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk-tools.zip
           unzip android-sdk-tools.zip -d ~/.android/cmdline-tools
 
+          # Перемещаем содержимое в правильную папку
+          mkdir -p ~/.android/cmdline-tools/latest
+          mv ~/.android/cmdline-tools/cmdline-tools/* ~/.android/cmdline-tools/latest/
+          rm -rf ~/.android/cmdline-tools/cmdline-tools
+
           # Настраиваем пути
           echo "export ANDROID_HOME=~/.android" >> ~/.bashrc
-          echo "export PATH=$PATH:$ANDROID_HOME/cmdline-tools/tools/bin" >> ~/.bashrc
+          echo "export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin" >> ~/.bashrc
           source ~/.bashrc
 
           # Принимаем лицензии
