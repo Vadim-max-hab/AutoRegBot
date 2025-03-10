@@ -44,3 +44,4 @@ jobs:
         with:
           name: AutoRegBot-APK
           path: bin/*.apk
+
