@@ -64,16 +64,27 @@ jobs:
           source ~/.bashrc
 
           # Принимаем лицензии
-          yes | sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
           # Устанавливаем необходимые компоненты
-          sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
+
+      - name: 🗄️ Кэшируем Android SDK
+        uses: actions/cache@v4
+        with:
+          path: ~/.android
+          key: android-sdk-${{ runner.os }}
+          restore-keys: |
+            android-sdk-${{ runner.os }}
 
       - name: 📦 Собираем APK
         run: |
           source ./venv/bin/activate
           mkdir -p bin
           buildozer -v android debug
+
+      - name: 📝 Логируем содержимое папки bin
+        run: ls -la bin
 
       - name: 📤 Загружаем APK в артефакты
         uses: actions/upload-artifact@v4
