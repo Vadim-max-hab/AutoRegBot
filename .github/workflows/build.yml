@@ -1,58 +1,58 @@
 name: Build Android APK
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-    steps:
-      - name: 🛠️ Клонируем репозиторий
-        uses: actions/checkout@v4
+    steps:
+      - name: 🛠️ Клонируем репозиторий
+        uses: actions/checkout@v4
 
-      - name: 🏗️ Устанавливаем зависимости
-        run: |
-          sudo apt update
-          sudo apt install -y python3 python3-pip openjdk-17-jdk
-          pip3 install --upgrade pip
+      - name: 🏗️ Устанавливаем зависимости
+        run: |
+          sudo apt update
+          sudo apt install -y python3 python3-pip openjdk-17-jdk
+          pip3 install --upgrade pip
 
-      - name: 📦 Устанавливаем Buildozer в виртуальном окружении
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install buildozer Cython
+      - name: 📦 Устанавливаем Buildozer в виртуальном окружении
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install buildozer Cython
 
-      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
-        run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
+      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
 
-      - name: 📦 Устанавливаем Android SDK и принимаем лицензии
-        run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
-          unzip android-sdk.zip -d $ANDROID_SDK_ROOT
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --update
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --licenses
-          $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager "build-tools;34.0.0"
+      - name: 📦 Устанавливаем Android SDK и принимаем лицензии
+        run: |
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
+          unzip android-sdk.zip -d $ANDROID_SDK_ROOT
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --update
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager "build-tools;34.0.0"
 
-      - name: 📦 Собираем APK
-        run: |
-          source venv/bin/activate
-          buildozer -v android debug
+      - name: 📦 Собираем APK
+        run: |
+          source venv/bin/activate
+          buildozer -v android debug
 
-      - name: 📤 Загружаем APK в артефакты
-        uses: actions/upload-artifact@v4
-        with:
-          name: AutoRegBot-APK
-          path: bin/*.apk​
+      - name: 📤 Загружаем APK в артефакты
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoRegBot-APK
+          path: bin/*.apk
