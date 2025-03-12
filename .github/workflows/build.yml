@@ -16,16 +16,18 @@ jobs:
       - name: 🛠️ Клонируем репозиторий
         uses: actions/checkout@v4
 
-      - name: 🏗️ Устанавливаем зависимости
+      - name: 🏗️ Устанавливаем Python 3.11 и зависимости
         run: |
           sudo apt update
-          sudo apt install -y python3 python3-pip openjdk-17-jdk
-          pip3 install --upgrade pip
-          pip3 install distutils
+          sudo apt install -y software-properties-common
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          sudo apt update
+          sudo apt install -y python3.11 python3.11-venv python3-distutils openjdk-17-jdk
+          python3.11 -m ensurepip --upgrade
 
       - name: 📦 Устанавливаем Buildozer в виртуальном окружении
         run: |
-          python3 -m venv venv
+          python3.11 -m venv venv
           source venv/bin/activate
           pip install buildozer Cython
 
