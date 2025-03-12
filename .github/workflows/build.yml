@@ -23,9 +23,8 @@ jobs:
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update
           sudo apt install -y python3.12 python3.12-venv openjdk-17-jdk
-          python3.12 -m ensurepip --upgrade
 
-      - name: 📦 Устанавливаем Buildozer и setuptools в виртуальном окружении
+      - name: 📦 Создаём виртуальное окружение и устанавливаем зависимости
         run: |
           python3.12 -m venv venv
           source venv/bin/activate
