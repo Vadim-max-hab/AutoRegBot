@@ -4,23 +4,38 @@ import string
 from config import TEMP_MAIL_API, SMS_SERVICES
 
 def get_temp_email():
-    """Получаем временную почту с API"""
-    response = requests.get(TEMP_MAIL_API)
-    return response.json()["email"]
+    """Получаем временную почту с API"""
+    try:
+        response = requests.get(TEMP_MAIL_API)
+        response.raise_for_status()  # Проверяем, что запрос успешен
+        return response.json()["email"]
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Ошибка при получении временной почты: {e}")
+        return None
 
 def get_sms_code(phone_number=None):
-    """Получаем номер телефона и SMS-код"""
-    for service_name, api_url in SMS_SERVICES.items():
-        response = requests.get(api_url)
+    """Получаем номер телефона и SMS-код"""
+    for service_name, api_url in SMS_SERVICES.items():
+        try:
+            response = requests.get(api_url)
+            response.raise_for_status()  # Проверяем, что запрос успешен
+            data = response.json()
 
-        if response.status_code == 200:
-            data = response.json()
-            if phone_number:
-                return data["sms_code"]
-            return data["phone"], service_name
+            if phone_number:
+                # Если передан номер, возвращаем SMS-код
+                if "sms_code" in data:
+                    return data["sms_code"]
+            else:
+                # Если номер не передан, возвращаем номер и имя сервиса
+                if "phone" in data:
+                    return data["phone"], service_name
 
-    return None, None
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Ошибка при запросе к сервису {service_name}: {e}")
 
-def generate_random_name():
-    """Генерируем случайное имя"""
-    return "".join(random.choices(string.ascii_letters, k=8))
+    return None, None
+
+def generate_random_name(length=8):
+    """Генерируем случайное имя"""
+    return "".join(random.choices(string.ascii_letters, k=length))
+​
