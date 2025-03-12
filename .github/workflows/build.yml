@@ -67,9 +67,10 @@ jobs:
           # Устанавливаем переменную окружения
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
-          # Принимаем лицензии и устанавливаем build-tools
+          # Принимаем лицензии
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --update
+
+          # Устанавливаем build-tools и platform-tools
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
 
       - name: 📦 Собираем APK
