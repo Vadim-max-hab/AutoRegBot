@@ -16,19 +16,20 @@ jobs:
       - name: 🛠️ Клонируем репозиторий
         uses: actions/checkout@v4
 
-      - name: 🏗️ Устанавливаем Python 3.8 и зависимости
+      - name: 🏗️ Устанавливаем Python 3.12 и зависимости
         run: |
           sudo apt update
           sudo apt install -y software-properties-common
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update
-          sudo apt install -y python3.8 python3.8-venv python3-distutils openjdk-17-jdk
-          python3.8 -m ensurepip --upgrade
+          sudo apt install -y python3.12 python3.12-venv openjdk-17-jdk
+          python3.12 -m ensurepip --upgrade
 
-      - name: 📦 Устанавливаем Buildozer в виртуальном окружении
+      - name: 📦 Устанавливаем Buildozer и setuptools в виртуальном окружении
         run: |
-          python3.8 -m venv venv
+          python3.12 -m venv venv
           source venv/bin/activate
+          pip install --upgrade pip setuptools
           pip install buildozer Cython
 
       - name: 🔧 Проверяем и удаляем существующий swap-файл
