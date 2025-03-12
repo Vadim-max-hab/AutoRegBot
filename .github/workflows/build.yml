@@ -71,8 +71,7 @@ jobs:
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
 
           # Устанавливаем build-tools и platform-tools
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
-
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" "platform-tools" "platforms;android-33"
           # Проверяем, что aidl установлен
           if [ ! -f "$ANDROID_SDK_ROOT/build-tools/34.0.0/aidl" ]; then
             echo "❌ Aidl не найден. Убедитесь, что build-tools установлены корректно."
