@@ -28,13 +28,20 @@ jobs:
           source venv/bin/activate
           pip install buildozer Cython
 
-      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
-        run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
+      - name: 🔧 Проверяем и удаляем существующий swap-файл
+  run: |
+    if swapon --show | grep -q '/swapfile'; then
+      sudo swapoff /swapfile
+      sudo rm -f /swapfile
+    fi
+
+- name: 🔧 Создаём swap-файл (чтобы хватило памяти)
+  run: |
+    sudo fallocate -l 4G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
 
       - name: 📦 Устанавливаем Android SDK и принимаем лицензии
         run: |
