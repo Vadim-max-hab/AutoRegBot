@@ -71,12 +71,44 @@ jobs:
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
 
           # Устанавливаем build-tools и platform-tools
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platform-tools" "platforms;android-34"
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34"
 
-          # Проверяем, что aidl установлен
-          if [ ! -f "$ANDROID_SDK_ROOT/build-tools/34.0.0/aidl" ]; then
-            echo "❌ Aidl не найден. Убедитесь, что build-tools установлены корректно."
-            exit 1
+          # Функция для проверки наличия aidl
+          check_aidl() {
+            if [ -f "$ANDROID_SDK_ROOT/build-tools/$1/aidl" ]; then
+              echo "✅ Aidl найден в версии $1."
+              return 0
+            else
+              echo "❌ Aidl не найден в версии $1."
+              return 1
+            fi
+          }
+
+          # Устанавливаем Build-Tools и проверяем наличие aidl
+          install_build_tools() {
+            version=$1
+            echo "🛠️ Устанавливаем Build-Tools версии $version..."
+            $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;$version"
+
+            if check_aidl "$version"; then
+              echo "✅ Build-Tools $version установлены успешно."
+              return 0
+            else
+              echo "❌ Build-Tools $version не установлены корректно."
+              return 1
+            fi
+          }
+
+          # Пробуем установить Build-Tools 34.0.0
+          if ! install_build_tools "34.0.0"; then
+            echo "🔄 Пробуем установить Build-Tools 33.0.0..."
+            if ! install_build_tools "33.0.0"; then
+              echo "🔄 Пробуем установить Build-Tools 30.0.3..."
+              if ! install_build_tools "30.0.3"; then
+                echo "❌ Не удалось установить Build-Tools. Проверьте логи."
+                exit 1
+              fi
+            fi
           fi
 
       - name: 📦 Собираем APK
