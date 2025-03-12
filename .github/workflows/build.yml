@@ -28,12 +28,9 @@ jobs:
           source venv/bin/activate
           pip install buildozer Cython==0.29.21
 
-      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
-        run: |
-          sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+      - name: 🛠️ Увеличиваем память без swap
+  run: |
+    sudo mount -t tmpfs -o size=6G tmpfs /mnt
 
       - name: 📦 Устанавливаем Android SDK и принимаем лицензии
         run: |
