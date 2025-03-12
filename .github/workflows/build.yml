@@ -19,8 +19,8 @@ jobs:
       - name: 🏗️ Устанавливаем зависимости
         run: |
           sudo apt update
-          sudo apt install -y openjdk-17-jdk
-          pip3 install --upgrade pip
+          sudo apt install -y python3 python3-pip openjdk-17-jdk
+          pip3 install --upgrade pip virtualenv
 
       - name: 📦 Устанавливаем Buildozer в виртуальном окружении
         run: |
@@ -30,19 +30,20 @@ jobs:
 
       - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
         run: |
-          sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo fallocate -l 4G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
 
       - name: 📦 Устанавливаем Android SDK и принимаем лицензии
         run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          sdkmanager --update
           yes | sdkmanager --licenses
-          sdkmanager --install "cmdline-tools;latest" "build-tools;34.0.0"
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: 📦 Собираем APK
         run: |
