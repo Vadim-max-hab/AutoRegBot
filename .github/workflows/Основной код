@@ -4,67 +4,74 @@ from utils import get_temp_email, get_sms_code, generate_random_name
 from config import SERVICES, PROXIES
 
 def register_service(service_name):
-    """Автоматическая регистрация аккаунта в сервисе"""
-    
-    if service_name not in SERVICES:
-        print(f"❌ Сервис {service_name} не поддерживается.")
-        return
-    
-    print(f"🚀 Начинаю регистрацию в {service_name}...")
+    """Автоматическая регистрация аккаунта в сервисе"""
+    
+    if service_name not in SERVICES:
+        print(f"❌ Сервис {service_name} не поддерживается.")
+        return
+    
+    print(f"🚀 Начинаю регистрацию в {service_name}...")
 
-    # 1. Генерируем временную почту
-    email = get_temp_email()
-    print(f"📩 Получена временная почта: {email}")
+    try:
+        # 1. Генерируем временную почту
+        email = get_temp_email()
+        print(f"📩 Получена временная почта: {email}")
 
-    # 2. Запрашиваем номер для SMS
-    phone_number, sms_service = get_sms_code()
-    if not phone_number:
-        print("❌ Не удалось получить номер. Пробуем другой сервис...")
-        return
+        # 2. Запрашиваем номер для SMS
+        phone_number, sms_service = get_sms_code()
+        if not phone_number:
+            print("❌ Не удалось получить номер. Пробуем другой сервис...")
+            return
 
-    print(f"📞 Получен номер: {phone_number} (через {sms_service})")
+        print(f"📞 Получен номер: {phone_number} (через {sms_service})")
 
-    # 3. Отправляем запрос на регистрацию
-    session = requests.Session()
-    session.proxies.update(PROXIES)
+        # 3. Отправляем запрос на регистрацию
+        session = requests.Session()
+        if PROXIES:
+            session.proxies.update(PROXIES)
 
-    data = {
-        "email": email,
-        "phone": phone_number,
-        "username": generate_random_name(),
-        "password": "Qwerty1234!"
-    }
+        data = {
+            "email": email,
+            "phone": phone_number,
+            "username": generate_random_name(),
+            "password": "Qwerty1234!"
+        }
 
-    response = session.post(SERVICES[service_name]["register_url"], json=data)
+        response = session.post(SERVICES[service_name]["register_url"], json=data)
 
-    if response.status_code == 200:
-        print(f"✅ Запрос на регистрацию отправлен! Ждём SMS-код...")
+        if response.status_code == 200:
+            print(f"✅ Запрос на регистрацию отправлен! Ждём SMS-код...")
 
-        # 4. Ожидаем SMS-код
-        sms_code = None
-        for _ in range(10):  
-            sms_code = get_sms_code(phone_number)
-            if sms_code:
-                print(f"📲 Получен SMS-код: {sms_code}")
-                break
-            time.sleep(5)
+            # 4. Ожидаем SMS-код
+            sms_code = None
+            for _ in range(10):  # 10 попыток с интервалом 5 секунд
+                sms_code = get_sms_code(phone_number)
+                if sms_code:
+                    print(f"📲 Получен SMS-код: {sms_code}")
+                    break
+                time.sleep(5)
 
-        if not sms_code:
-            print("❌ Не удалось получить SMS-код. Прерываю регистрацию.")
-            return
+            if not sms_code:
+                print("❌ Не удалось получить SMS-код. Прерываю регистрацию.")
+                return
 
-        # 5. Подтверждаем регистрацию
-        confirm_data = {"code": sms_code}
-        confirm_response = session.post(SERVICES[service_name]["confirm_url"], json=confirm_data)
+            # 5. Подтверждаем регистрацию
+            confirm_data = {"code": sms_code}
+            confirm_response = session.post(SERVICES[service_name]["confirm_url"], json=confirm_data)
 
-        if confirm_response.status_code == 200:
-            print(f"🎉 Аккаунт {service_name} успешно зарегистрирован!")
-        else:
-            print("❌ Ошибка подтверждения регистрации.")
+            if confirm_response.status_code == 200:
+                print(f"🎉 Аккаунт {service_name} успешно зарегистрирован!")
+            else:
+                print(f"❌ Ошибка подтверждения регистрации. Код ответа: {confirm_response.status_code}")
 
-    else:
-        print("❌ Ошибка при отправке запроса.")
+        else:
+            print(f"❌ Ошибка при отправке запроса. Код ответа: {response.status_code}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Ошибка сети: {e}")
+    except Exception as e:
+        print(f"❌ Неизвестная ошибка: {e}")
 
 if __name__ == "__main__":
-    for service in SERVICES.keys():
-        register_service(service)
+    for service in SERVICES.keys():
+        register_service(service)​
