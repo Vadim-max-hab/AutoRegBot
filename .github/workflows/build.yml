@@ -13,68 +13,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛠️ Клонирование репозитория
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🏗️ Установка Python 3.12 и зависимостей
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt-get update
-          sudo apt-get install -y python3.12 python3.12-venv openjdk-17-jdk unzip wget
+      - name: Set up Java and Android SDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: 'gradle'
 
-      - name: 📦 Создание виртуального окружения и установка зависимостей
-        run: |
-          python3.12 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip wheel setuptools
-          pip install buildozer==1.7.1 Cython==0.29.33
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 34
+          build-tools-version: 35.0.0
+          android-sdk-root: 'android-sdk'
 
-      - name: 🔧 Инициализация buildozer.spec
-        run: |
-          source venv/bin/activate
-          buildozer init
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: 🔧 Проверка и создание swap-файла
-        run: |
-          if swapon --show | grep -q '/swapfile'; then
-            sudo swapoff /swapfile
-            sudo rm -f /swapfile
-          fi
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-      - name: 📦 Установка Android SDK и принятие лицензий
-        run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d cmdline-tools
-          mv cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
-          export PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
-          which sdkmanager || { echo "❌ sdkmanager не найден"; exit 1; }
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;35.0.0"
-          AIDL_PATH="$HOME/android-sdk/build-tools/35.0.0/aidl"
-          if [ ! -f "$AIDL_PATH" ]; then
-            echo "❌ aidl не найден, пробуем установить более старую версию"
-            sdkmanager "build-tools;30.0.3"
-          fi
-
-      - name: 📦 Сборка APK
-        run: |
-          source venv/bin/activate
-          buildozer -v android debug
-
-      - name: 📤 Загрузка APK в артефакты
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: AutoRegBot-APK
-          path: bin/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Save built APK to release
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
