@@ -69,14 +69,15 @@ jobs:
           export PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
           which sdkmanager || { echo "❌ sdkmanager не найден"; exit 1; }
 
-          # Принимаем лицензии
+          # Принудительно принимаем лицензии
           yes | sdkmanager --licenses || true
 
-          # Устанавливаем build-tools и platform-tools
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          # Устанавливаем стабильные версии build-tools и platform-tools
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;35.0.0"
 
-          # Проверяем установку aidl
-          if [ ! -f "$HOME/android-sdk/build-tools/34.0.0/aidl" ]; then
+          # Проверяем, установлен ли aidl
+          AIDL_PATH="$HOME/android-sdk/build-tools/35.0.0/aidl"
+          if [ ! -f "$AIDL_PATH" ]; then
             echo "❌ aidl не найден, пробуем установить более старую версию"
             sdkmanager "build-tools;30.0.3"
           fi
