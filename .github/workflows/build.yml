@@ -22,7 +22,7 @@ jobs:
           sudo apt install -y software-properties-common
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update
-          sudo apt install -y python3.12 python3.12-venv openjdk-17-jdk zip unzip
+          sudo apt install -y python3.12 python3.12-venv openjdk-17-jdk unzip wget
 
       - name: 📦 Создаём виртуальное окружение и устанавливаем зависимости
         run: |
@@ -36,85 +36,52 @@ jobs:
           source venv/bin/activate
           buildozer init
 
-      - name: 🔧 Создаём swap-файл (чтобы хватило памяти)
+      - name: 🔧 Проверяем и создаем swap-файл
         run: |
-          if [ ! -f /swapfile ]; then
-            sudo fallocate -l 4G /swapfile
-            sudo chmod 600 /swapfile
-            sudo mkswap /swapfile
-            sudo swapon /swapfile
-            echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
+          if swapon --show | grep -q '/swapfile'; then
+            sudo swapoff /swapfile
+            sudo rm -f /swapfile
           fi
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
 
       - name: 📦 Устанавливаем Android SDK и принимаем лицензии
         run: |
-          export ANDROID_SDK_ROOT=$HOME/.android-sdk
-          mkdir -p $ANDROID_SDK_ROOT
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk
+          
+          # Загружаем и извлекаем Android Command Line Tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d cmdline-tools
 
-          if [ ! -d "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" ]; then
-            echo "📥 Скачиваем Android Command Line Tools..."
-            wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O android-sdk.zip
-            unzip android-sdk.zip -d android-sdk
-            mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
-            mv android-sdk/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
-            rm android-sdk.zip
+          # Перемещаем файлы в правильную директорию
+          mv cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          
+          # Устанавливаем переменные окружения
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
+
+          # Проверяем, доступен ли sdkmanager
+          export PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
+          which sdkmanager || { echo "❌ sdkmanager не найден"; exit 1; }
+
+          # Принимаем лицензии
+          yes | sdkmanager --licenses || true
+
+          # Устанавливаем build-tools и platform-tools
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+          # Проверяем установку aidl
+          if [ ! -f "$HOME/android-sdk/build-tools/34.0.0/aidl" ]; then
+            echo "❌ aidl не найден, пробуем установить более старую версию"
+            sdkmanager "build-tools;30.0.3"
           fi
 
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-
-          yes | sdkmanager --licenses
-          sdkmanager --update
-          sdkmanager "platform-tools" "platforms;android-34"
-
-      - name: 🔍 Проверяем и устанавливаем Build-Tools, Aidl
-        run: |
-          install_build_tools() {
-            version=$1
-            echo "🛠️ Устанавливаем Build-Tools версии $version..."
-            sdkmanager "build-tools;$version"
-
-            if [ -f "$ANDROID_SDK_ROOT/build-tools/$version/aidl" ]; then
-              echo "✅ Aidl найден в версии $version."
-              return 0
-            else
-              echo "❌ Aidl не найден, пробуем другую версию..."
-              return 1
-            fi
-          }
-
-          # Пробуем версии Build-Tools
-          if ! install_build_tools "34.0.0"; then
-            if ! install_build_tools "33.0.0"; then
-              if ! install_build_tools "30.0.3"; then
-                echo "❌ Ошибка: Не удалось установить Build-Tools с Aidl."
-                exit 1
-              fi
-            fi
-          fi
-
-      - name: 🔍 Проверяем и устанавливаем NDK
-        run: |
-          if [ ! -d "$ANDROID_SDK_ROOT/ndk/25.2.9519653" ]; then
-            echo "📥 Устанавливаем NDK..."
-            sdkmanager "ndk;25.2.9519653"
-          fi
-
-      - name: 📊 Проверка установленных версий
-        run: |
-          echo "🔹 Python:"
-          python3.12 --version
-          echo "🔹 Java:"
-          java -version
-          echo "🔹 Buildozer:"
-          source venv/bin/activate
-          buildozer --version
-          echo "🔹 Android SDK:"
-          sdkmanager --list_installed
-
-      - name: 🚀 Сборка APK
+      - name: 📦 Собираем APK
         run: |
           source venv/bin/activate
           buildozer -v android debug
