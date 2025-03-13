@@ -18,6 +18,23 @@ jobs:
         with:
           fetch-depth: 0  # Загружаем весь репозиторий
 
+      - name: List repository files
+        run: ls -R  # Показываем структуру файлов
+
+      - name: Check for required Gradle files
+        run: |
+          if [ ! -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "Error: gradle-wrapper.properties not found!"
+            exit 1
+          fi
+          if [ ! -f "app/build.gradle" ]; then
+            echo "Error: app/build.gradle not found!"
+            exit 1
+          fi
+
+      - name: Clear Gradle cache
+        run: rm -rf ~/.gradle/caches
+
       - name: Set up Java and Android SDK
         uses: actions/setup-java@v3
         with:
@@ -30,17 +47,6 @@ jobs:
         with:
           api-level: 34
           build-tools-version: 35.0.0
-
-      - name: Check for required Gradle files
-        run: |
-          if [ ! -f "gradle/wrapper/gradle-wrapper.properties" ]; then
-            echo "Error: gradle-wrapper.properties not found!"
-            exit 1
-          fi
-          if [ ! -f "app/build.gradle" ]; then
-            echo "Error: app/build.gradle not found!"
-            exit 1
-          fi
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
