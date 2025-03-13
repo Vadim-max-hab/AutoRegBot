@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 🛠️ Клонирование репозитория
         uses: actions/checkout@v4
 
-      - name: Set up Python and dependencies
+      - name: 🏗️ Установка Python 3.12 и зависимостей
         run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
@@ -24,19 +24,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3.12 python3.12-venv openjdk-17-jdk unzip wget
 
-      - name: Create virtual environment and install dependencies
+      - name: 📦 Создание виртуального окружения и установка зависимостей
         run: |
           python3.12 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip wheel setuptools
-          pip install buildozer Cython
+          pip install buildozer==1.7.1 Cython==0.29.33
 
-      - name: Initialize buildozer.spec file
+      - name: 🔧 Инициализация buildozer.spec
         run: |
           source venv/bin/activate
           buildozer init
 
-      - name: Check and create swap file
+      - name: 🔧 Проверка и создание swap-файла
         run: |
           if swapon --show | grep -q '/swapfile'; then
             sudo swapoff /swapfile
@@ -48,7 +48,7 @@ jobs:
           sudo swapon /swapfile
           echo "SWAPFILE=/swapfile" >> $GITHUB_ENV
 
-      - name: Install Android SDK and accept licenses
+      - name: 📦 Установка Android SDK и принятие лицензий
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk
@@ -59,21 +59,21 @@ jobs:
           echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
           echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
           export PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
-          which sdkmanager || { echo "❌ sdkmanager not found"; exit 1; }
+          which sdkmanager || { echo "❌ sdkmanager не найден"; exit 1; }
           yes | sdkmanager --licenses || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;35.0.0"
           AIDL_PATH="$HOME/android-sdk/build-tools/35.0.0/aidl"
           if [ ! -f "$AIDL_PATH" ]; then
-            echo "❌ aidl not found, trying to install older version"
+            echo "❌ aidl не найден, пробуем установить более старую версию"
             sdkmanager "build-tools;30.0.3"
           fi
 
-      - name: Build APK
+      - name: 📦 Сборка APK
         run: |
           source venv/bin/activate
           buildozer -v android debug
 
-      - name: Upload APK artifact
+      - name: 📤 Загрузка APK в артефакты
         uses: actions/upload-artifact@v4
         with:
           name: AutoRegBot-APK
