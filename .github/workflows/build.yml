@@ -29,7 +29,7 @@ jobs:
           python3.12 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip wheel setuptools
-          pip install buildozer==1.7.1 Cython==0.29.33
+          pip install buildozer Cython
 
       - name: Initialize buildozer.spec file
         run: |
